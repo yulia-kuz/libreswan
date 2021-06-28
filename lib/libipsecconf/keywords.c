@@ -252,6 +252,20 @@ static const struct keyword_enum_value kw_rsasigkey_values[] = {
 static const struct keyword_enum_values kw_rsasigkey_list = VALUES_INITIALIZER(kw_rsasigkey_values);
 
 /*
+ * Values for publickey={ %cert, %dnsondemand, %dns, literal }
+ */
+static const struct keyword_enum_value kw_publickey_values[] = {
+	{ "",             PUBKEY_PREEXCHANGED },
+	{ "%cert",        PUBKEY_CERTIFICATE },
+#ifdef USE_DNSSEC
+	{ "%dns",         PUBKEY_DNSONDEMAND },
+	{ "%dnsondemand", PUBKEY_DNSONDEMAND },
+#endif
+};
+
+static const struct keyword_enum_values kw_publickey_list = VALUES_INITIALIZER(kw_publickey_values);
+
+/*
  * Values for protostack=
  */
 static const struct keyword_enum_value kw_proto_stack_list[] = {
@@ -460,6 +474,7 @@ const struct keyword_def ipsec_conf_keywords[] = {
   { "updown",  kv_conn | kv_leftright,  kt_filename,  KSCF_UPDOWN, NULL, NULL, },
   { "id",  kv_conn | kv_leftright,  kt_idtype,  KSCF_ID, NULL, NULL, },
   { "rsasigkey",  kv_conn | kv_leftright,  kt_rsasigkey,  KSCF_RSASIGKEY,  &kw_rsasigkey_list, NULL, },
+  { "publickey",  kv_conn | kv_leftright,  kt_publickey,  KSCF_PUBLICKEY,  &kw_publickey_list, NULL, },
   { "cert",  kv_conn | kv_leftright,  kt_filename,  KSCF_CERT, NULL, NULL, },
   { "ckaid",  kv_conn | kv_leftright,  kt_string,  KSCF_CKAID, NULL, NULL, },
   { "sendcert",  kv_conn | kv_leftright,  kt_enum,  KNCF_SENDCERT,  &kw_sendcert_list, NULL, },
@@ -786,7 +801,8 @@ unsigned int parser_loose_enum(struct keyword *k, const char *s)
 	const struct keyword_enum_value *kev;
 	unsigned int valresult;
 
-	assert(kd->type == kt_loose_enum || kd->type == kt_rsasigkey);
+	assert(kd->type == kt_loose_enum || kd->type == kt_rsasigkey ||
+           kd->type == kt_publickey);
 	assert(kd->validenum != NULL && kd->validenum->values != NULL);
 
 	for (kevcount = kd->validenum->valuesize, kev = kd->validenum->values;

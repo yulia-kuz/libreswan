@@ -83,6 +83,7 @@ static void confwrite_int(FILE *out,
 		case kt_filename:
 		case kt_dirname:
 		case kt_rsasigkey:
+		case kt_publickey:
 
 		case kt_percent:
 		case kt_ipaddr:
@@ -220,6 +221,7 @@ static void confwrite_str(FILE *out,
 			break;
 
 		case kt_rsasigkey:
+		case kt_publickey:
 		case kt_ipaddr:
 		case kt_range:
 		case kt_subnet:
@@ -353,6 +355,9 @@ static void confwrite_side(FILE *out,
 
 	if (end->rsasigkey != NULL && end->rsasigkey[0] != '\0')
 		fprintf(out, "\t%srsasigkey=%s\n", side, end->rsasigkey);
+
+	if (end->publickey != NULL && end->publickey[0] != '\0')
+		fprintf(out, "\t%spublickey=%s\n", side, end->publickey);
 
 	if (protoport_is_set(&end->protoport)) {
 		protoport_buf buf;

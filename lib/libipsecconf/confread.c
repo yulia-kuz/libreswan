@@ -361,6 +361,7 @@ static bool load_setup(struct starter_config *cfg,
 
 		case kt_bitstring:
 		case kt_rsasigkey:
+		case kt_publickey:
 		case kt_ipaddr:
 		case kt_subnet:
 		case kt_range:
@@ -635,6 +636,25 @@ static bool validate_end(struct starter_conn *conn_st,
 		}
 	}
 
+	if (end->options_set[KSCF_PUBLICKEY]) {
+		end->publickey_type = end->options[KSCF_PUBLICKEY];
+
+		switch (end->options[KSCF_PUBLICKEY]) {
+		case PUBKEY_DNSONDEMAND:
+			end->key_from_DNS_on_demand = TRUE;
+			break;
+
+		default:
+			end->key_from_DNS_on_demand = FALSE;
+			/* validate the KSCF_PUBLICKEY1/PUBLICKEY2 */
+			if (end->strings[KSCF_PUBLICKEY] != NULL) {
+				char *value = end->strings[KSCF_PUBLICKEY];
+				pfreeany(end->publickey);
+				end->publickey = clone_str(value, "end->publickey");
+			}
+		}
+	}
+
 	/* validate the KSCF_SOURCEIP, if any, and if set,
 	 * set the subnet to same value, if not set.
 	 */
@@ -903,6 +923,7 @@ static bool translate_conn(struct starter_conn *conn,
 			break;
 
 		case kt_rsasigkey:
+		case kt_publickey:
 		case kt_loose_enum:
 			assert(field <= KSCF_last_loose);
 
@@ -1591,6 +1612,7 @@ static void copy_conn_default(struct starter_conn *conn,
 	STR_FIELD_END(id);
 	STR_FIELD_END(sec_label);
 	STR_FIELD_END(rsasigkey);
+	STR_FIELD_END(publickey);
 	STR_FIELD_END(virt);
 	STR_FIELD_END(certx);
 	STR_FIELD_END(ckaid);
@@ -1769,6 +1791,7 @@ static void confread_free_conn(struct starter_conn *conn)
 	STR_FIELD_END(id);
 	STR_FIELD_END(sec_label);
 	STR_FIELD_END(rsasigkey);
+	STR_FIELD_END(publickey);
 	STR_FIELD_END(virt);
 	STR_FIELD_END(certx);
 	STR_FIELD_END(ckaid);

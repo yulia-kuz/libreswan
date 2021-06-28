@@ -76,6 +76,8 @@ struct starter_end {
 
 	enum keyword_pubkey rsasigkey_type;
 	char *rsasigkey;
+	enum keyword_pubkey publickey_type;
+	char *publickey;
 	bool key_from_DNS_on_demand;
 	char *virt;
 	char *certx;

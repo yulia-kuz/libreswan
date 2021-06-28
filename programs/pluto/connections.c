@@ -865,6 +865,12 @@ static int extract_end(struct connection *c,
 				    dst->leftright, src->cert,
 				    dst->leftright, src->cert);
 		}
+		if (src->publickey != NULL) {
+			llog(RC_LOG, logger,
+				    "warning: ignoring %s publickey '%s' and using %s certificate '%s'",
+				    dst->leftright, src->cert,
+				    dst->leftright, src->cert);
+		}
 		CERTCertificate *cert = get_cert_by_nickname_from_nss(src->cert, logger);
 		if (cert == NULL) {
 			llog(RC_FATAL, logger,
@@ -898,6 +904,56 @@ static int extract_end(struct connection *c,
 
 		/* ??? this value of err isn't used */
 		err_t err = ttodatav(src->rsasigkey, 0, 0,
+				     keyspace, sizeof(keyspace), &keylen,
+				     err_buf, sizeof(err_buf), 0);
+		union pubkey_content pkc;
+		keyid_t pubkey;
+		ckaid_t ckaid;
+		size_t size;
+		err = type->unpack_pubkey_content(&pkc, &pubkey, &ckaid, &size,
+						  chunk2(keyspace, keylen));
+		if (err != NULL) {
+			llog(RC_FATAL, logger,
+				    "failed to add connection: %s raw public key invalid: %s",
+				    dst->leftright, err);
+			return -1;
+		}
+		ckaid_buf ckb;
+		dbg("saving %s CKAID %s extracted from raw %s public key",
+		    dst->leftright, str_ckaid(&ckaid, &ckb), type->name);
+		dst->ckaid = clone_const_thing(ckaid, "raw pubkey's ckaid");
+		type->free_pubkey_content(&pkc);
+		/* try to pre-load the private key */
+		bool load_needed;
+		err = preload_private_key_by_ckaid(&ckaid, &load_needed, logger);
+		if (err != NULL) {
+			ckaid_buf ckb;
+			dbg("no private key matching %s CKAID %s: %s",
+			    dst->leftright, str_ckaid(dst->ckaid, &ckb), err);
+		} else if (load_needed) {
+			ckaid_buf ckb;
+			llog(RC_LOG|LOG_STREAM/*not-whack-for-now*/, logger,
+				    "loaded private key matching %s CKAID %s",
+				    dst->leftright, str_ckaid(dst->ckaid, &ckb));
+		}
+	} else if (src->publickey != NULL) {
+		if (src->ckaid != NULL) {
+			llog(RC_LOG, logger,
+				    "warning: ignoring %s ckaid '%s' and using %s publickey",
+				    dst->leftright, src->ckaid, dst->leftright);
+		}
+		/*
+		 * XXX: hack: whack will load the publickey in a
+		 * second message, this code just extracts the ckaid.
+		 */
+		const struct pubkey_type *type = &pubkey_type_ecdsa;
+		/* XXX: lifted from starter_whack_add_pubkey() */
+		char err_buf[TTODATAV_BUF];
+		char keyspace[1024 + 4];
+		size_t keylen;
+
+		/* ??? this value of err isn't used */
+		err_t err = ttodatav(src->publickey, 0, 0,
 				     keyspace, sizeof(keyspace), &keylen,
 				     err_buf, sizeof(err_buf), 0);
 		union pubkey_content pkc;

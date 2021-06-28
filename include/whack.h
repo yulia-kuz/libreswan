@@ -88,6 +88,8 @@ struct whack_end {
 	char *cert;
 	char *ckaid;
 	char *rsasigkey;
+	char *publickey;
+	enum pubkey_alg publickey_alg;
 
 	enum keyword_authby authby;
 

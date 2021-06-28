@@ -384,6 +384,19 @@ static void set_whack_end(char *lr,
 		passert(l->rsasigkey != NULL);
 		w->rsasigkey = l->rsasigkey;
 	}
+	if (l->publickey_type == PUBKEY_PREEXCHANGED) {
+		/*
+		 * Only send over raw (prexchanged) publickeys (i.e.,
+		 * not %cert et.a.)
+		 *
+		 * XXX: but what is with the two raw publickeys?  Whack seems
+		 * to be willing to send pluto two raw pubkeys under
+		 * the same ID.  Just assume that the first key should
+		 * be used for the CKAID.
+		 */
+		passert(l->publickey != NULL);
+		w->publickey = l->publickey;
+	}
 	w->ca = l->ca;
 	if (l->options_set[KNCF_SENDCERT])
 		w->sendcert = l->options[KNCF_SENDCERT];
@@ -425,8 +438,8 @@ static int starter_whack_add_pubkey(struct starter_config *cfg,
 
 	struct whack_message msg = empty_whack_message;
 	msg.whack_key = true;
-	msg.pubkey_alg = PUBKEY_ALG_RSA;
 	if (end->id && end->rsasigkey) {
+		msg.pubkey_alg = PUBKEY_ALG_RSA;
 		msg.keyid = end->id;
 
 		switch (end->rsasigkey_type) {
@@ -459,6 +472,45 @@ static int starter_whack_add_pubkey(struct starter_config *cfg,
 				starter_log(LOG_LEVEL_DEBUG,
 					    "\tsending %s %srsasigkey=%s",
 					    connection_name(conn), lr, end->rsasigkey);
+				msg.keyval.ptr = (unsigned char *)keyspace;
+				ret = send_whack_msg(&msg, cfg->ctlsocket);
+			}
+		}
+	}
+	if (end->id && end->publickey) {
+		msg.pubkey_alg = PUBKEY_ALG_ECDSA;
+		msg.keyid = end->id;
+
+		switch (end->publickey_type) {
+		case PUBKEY_DNSONDEMAND:
+			starter_log(LOG_LEVEL_DEBUG,
+				"conn %s/%s has key from DNS",
+				connection_name(conn), lr);
+			break;
+
+		case PUBKEY_CERTIFICATE:
+			starter_log(LOG_LEVEL_DEBUG,
+				"conn %s/%s has key from certificate",
+				connection_name(conn), lr);
+			break;
+
+		case PUBKEY_NOTSET:
+			break;
+
+		case PUBKEY_PREEXCHANGED:
+			err = ttodatav(end->publickey, 0, 0, keyspace,
+				sizeof(keyspace),
+				&msg.keyval.len,
+				err_buf, sizeof(err_buf), 0);
+			if (err) {
+				starter_log(LOG_LEVEL_ERR,
+					"conn %s/%s: publickey malformed [%s]",
+					connection_name(conn), lr, err);
+				return 1;
+			} else {
+				starter_log(LOG_LEVEL_DEBUG,
+					    "\tsending %s %spublickey=%s",
+					    connection_name(conn), lr, end->publickey);
 				msg.keyval.ptr = (unsigned char *)keyspace;
 				ret = send_whack_msg(&msg, cfg->ctlsocket);
 			}

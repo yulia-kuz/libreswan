@@ -130,6 +130,7 @@ enum keyword_string_conn_field {
 	KSCF_IP,	/* loose_enum */ /* left/right */
 	KSCF_NEXTHOP,	/* loose_enum */ /* left/right */
 	KSCF_RSASIGKEY,	/* loose_enum */ /* left/right */
+	KSCF_PUBLICKEY, /* loose_enum */ /* left/right */
 	KSCF_XFRM_IF_ID,
 		KSCF_last_loose = KSCF_XFRM_IF_ID,
 
@@ -184,6 +185,7 @@ enum keyword_numeric_conn_field {
 	KNCF_IP		= KSCF_IP,	/* loose_enum */ /* left/right */
 	KNCF_NEXTHOP	= KSCF_NEXTHOP,	/* loose_enum */ /* left/right */
 	KNCF_RSASIGKEY	= KSCF_RSASIGKEY,	/* loose_enum */ /* left/right */
+	KNCF_PUBLICKEY  = KSCF_PUBLICKEY,	/* loose_enum */ /* left/right */
 	KNCF_XFRM_IF_ID =  KSCF_XFRM_IF_ID,
 
 	KNCF_XAUTHSERVER,	/* left/right */
@@ -317,7 +319,8 @@ enum keyword_auto {
 };
 
 /*
- * Potential keyword values for fields like {left,right}rsasigkey=.
+ * Potential keyword values for fields like {left,right}rsasigkey=,
+ * {left,right}publickey=
  *
  * This is internal to the config parser and doesn't belong in whack
  * or on the wire.
@@ -362,6 +365,7 @@ enum keyword_type {
 	kt_lset,		/* a set of values from an enum name */
 	kt_loose_enum,          /* either a string, or a %-prefixed enum */
 	kt_rsasigkey,           /* a public key, or set of values */
+	kt_publickey,			/* a public key, or set of values */
 	kt_number,              /* an integer */
 	kt_time,                /* a number representing time */
 	kt_percent,             /* a number representing percentage */
