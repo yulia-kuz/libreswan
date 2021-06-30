@@ -539,3 +539,8 @@ conn road-client
 	also=left-defaultroute
 	also=right-defaultroute
 	narrowing=yes
+
+conn west-leftecdsasigkey
+        leftecdsasigkey=0sQQSMcVuiY8FHeNpcjZsyi+gwbRFO0T56CD5Xtvu3/gdiWefx5yqHJooFiTzo0ba/R99aKtSYeT2D7DIbuc19m8VQBggqhkjOPQMBBw==
+conn west-leftecdsackaid
+        leftecdsackaid=b2728a0d3fb7ee6cdfe2d5291f2ed98bf100409f
